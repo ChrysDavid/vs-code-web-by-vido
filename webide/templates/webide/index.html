@@ -1,0 +1,134 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>VidoHackers IDE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-darker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'webide/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="file-header">
+                <h3><i class="fas fa-folder-open"></i> EXPLORER</h3>
+                <div class="file-actions">
+                    <button id="new-file-btn" title="Nouveau fichier">
+                        <i class="fas fa-file-plus"></i>
+                    </button>
+                    <button id="new-folder-btn" title="Nouveau dossier">
+                        <i class="fas fa-folder-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="file-explorer">
+                <ul id="file-list">
+                    <li data-path="main.py" class="active"><i class="fab fa-python gutter-icon"></i>main.py</li>
+                    <li data-path="scraper.py"><i class="fab fa-python gutter-icon"></i>scraper.py</li>
+                    <li data-path="config.json"><i class="fas fa-cog gutter-icon"></i>config.json</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="tabs" id="editor-tabs">
+                <div class="tab active" data-path="main.py">
+                    <i class="fab fa-python gutter-icon"></i>
+                    main.py
+                    <span class="tab-close">×</span>
+                </div>
+            </div>
+
+            <div class="editor-container" id="editor-container">
+                <div class="editor-panel active" data-path="main.py">
+                    <textarea id="editor-main.py"></textarea>
+                </div>
+                <div class="editor-controls">
+                    <select id="language-select">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="java">Java</option>
+                        <option value="c">C</option>
+                    </select>
+                    <button id="run-button" class="primary"><i class="fas fa-play"></i> Exécuter</button>
+                </div>
+            </div>
+
+            <div class="resize-handle" id="terminal-resize"></div>
+
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <div class="terminal-header-title">
+                        <i class="fas fa-terminal"></i> TERMINAL
+                    </div>
+                    <div class="terminal-header-actions">
+                        <div class="dropdown">
+                            <button title="Options"><i class="fas fa-ellipsis-v"></i></button>
+                            <div class="dropdown-content">
+                                <button id="clear-terminal"><i class="fas fa-eraser"></i> Effacer le terminal</button>
+                                <button id="kill-process"><i class="fas fa-stop"></i> Arrêter le processus</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="terminal" id="terminal">
+                    <div class="terminal-content" id="terminal-content">
+                        <div class="terminal-line">
+                            <div class="terminal-line-output">VidoHackers IDE v1.0.0 - Terminal interactif</div>
+                        </div>
+                        <div class="terminal-line">
+                            <div class="terminal-line-output">Tapez 'help' pour afficher les commandes disponibles.</div>
+                        </div>
+                    </div>
+                    <div class="terminal-input-line">
+                        <div class="terminal-input-prompt">VidoHackers:\Users\projet\test></div>
+                        <input type="text" class="terminal-input" id="terminal-input" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <div class="status-item"><i class="fab fa-python"></i> Python</div>
+                <div class="status-item">UTF-8</div>
+                <div class="status-item">LF</div>
+                <div class="status-item" id="cursor-position">Ln 1, Col 1</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="backdrop" id="backdrop"></div>
+    <div class="dialog" id="new-file-dialog">
+        <h3>Nouveau fichier</h3>
+        <input type="text" id="new-file-name" placeholder="nom-de-fichier.py">
+        <div class="dialog-buttons">
+            <button id="cancel-new-file">Annuler</button>
+            <button class="primary" id="create-new-file">Créer</button>
+        </div>
+    </div>
+
+    <div class="dialog" id="new-folder-dialog">
+        <h3>Nouveau dossier</h3>
+        <input type="text" id="new-folder-name" placeholder="nom-du-dossier">
+        <div class="dialog-buttons">
+            <button id="cancel-new-folder">Annuler</button>
+            <button class="primary" id="create-new-folder">Créer</button>
+        </div>
+    </div>
+
+    <div class="context-menu" id="file-context-menu">
+        <button id="context-rename"><i class="fas fa-edit"></i> Renommer</button>
+        <button id="context-delete"><i class="fas fa-trash"></i> Supprimer</button>
+        <button id="context-run"><i class="fas fa-play"></i> Exécuter</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <script src="{% static 'webide/script.js' %}"></script>
+</body>
+</html>
