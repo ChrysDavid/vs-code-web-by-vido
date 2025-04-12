@@ -56,7 +56,7 @@ ROOT_URLCONF = 'ideproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -118,7 +118,24 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Configuration des fichiers statiques
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  # Chemin vers le dossier static à la racine
+]
+
+# Si vous utilisez collectstatic en production
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Pour assurer la sécurité des fichiers utilisateurs
+# Dossier pour stocker les fichiers utilisateurs
+FILES_ROOT = BASE_DIR / 'files'
+
+# Si vous avez besoin de configurer le délai d'exécution des programmes
+CODE_EXECUTION_TIMEOUT = 5  # en secondes
