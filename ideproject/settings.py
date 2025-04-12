@@ -139,3 +139,5 @@ FILES_ROOT = BASE_DIR / 'files'
 
 # Si vous avez besoin de configurer le délai d'exécution des programmes
 CODE_EXECUTION_TIMEOUT = 5  # en secondes
+CORS_ALLOW_ALL_ORIGINS = True  # Seulement en développement
+CORS_ALLOW_CREDENTIALS = True

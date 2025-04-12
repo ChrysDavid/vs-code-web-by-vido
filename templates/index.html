@@ -5,8 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <title>VidoHackers IDE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-darker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/show-hint.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
@@ -21,6 +23,12 @@
                     </button>
                     <button id="new-folder-btn" title="Nouveau dossier">
                         <i class="fas fa-folder-plus"></i>
+                    </button>
+                    <button id="import-project-btn" title="Importer un projet">
+                        <i class="fas fa-file-import"></i>
+                    </button>
+                    <button id="export-project-btn" title="Exporter le projet">
+                        <i class="fas fa-file-export"></i>
                     </button>
                 </div>
             </div>
@@ -53,6 +61,15 @@
                         <option value="java">Java</option>
                         <option value="c">C</option>
                     </select>
+                    <div class="theme-switch">
+                        <select id="theme-select" class="theme-select">
+                            <option value="default">Thème par défaut</option>
+                            <option value="material-darker">Material Dark</option>
+                            <option value="dracula">Dracula</option>
+                            <option value="monokai">Monokai</option>
+                            <option value="solarized">Solarized</option>
+                        </select>
+                    </div>
                     <button id="run-button" class="primary"><i class="fas fa-play"></i> Exécuter</button>
                 </div>
             </div>
@@ -70,6 +87,7 @@
                             <div class="dropdown-content">
                                 <button id="clear-terminal"><i class="fas fa-eraser"></i> Effacer le terminal</button>
                                 <button id="kill-process"><i class="fas fa-stop"></i> Arrêter le processus</button>
+                                <button id="reset-terminal"><i class="fas fa-sync-alt"></i> Réinitialiser le terminal</button>
                             </div>
                         </div>
                     </div>
@@ -91,10 +109,11 @@
             </div>
 
             <div class="status-bar">
-                <div class="status-item"><i class="fab fa-python"></i> Python</div>
+                <div class="status-item language-indicator"><i class="fab fa-python"></i> Python</div>
                 <div class="status-item">UTF-8</div>
                 <div class="status-item">LF</div>
                 <div class="status-item" id="cursor-position">Ln 1, Col 1</div>
+                <div class="status-item errors"><i class="fas fa-check-circle"></i> Aucune erreur</div>
             </div>
         </div>
     </div>
@@ -118,20 +137,48 @@
         </div>
     </div>
 
+    <div class="dialog" id="import-project-dialog">
+        <h3>Importer un projet</h3>
+        <p>Sélectionnez un fichier ZIP contenant votre projet</p>
+        <form id="import-form" enctype="multipart/form-data">
+            <input type="file" id="import-file" accept=".zip">
+            <div class="import-progress">
+                <div class="import-progress-bar" id="import-progress-bar"></div>
+            </div>
+            <div class="dialog-buttons">
+                <button type="button" id="cancel-import">Annuler</button>
+                <button type="submit" class="primary" id="confirm-import">Importer</button>
+            </div>
+        </form>
+    </div>
+
     <div class="context-menu" id="file-context-menu">
         <button id="context-rename"><i class="fas fa-edit"></i> Renommer</button>
         <button id="context-delete"><i class="fas fa-trash"></i> Supprimer</button>
         <button id="context-run"><i class="fas fa-play"></i> Exécuter</button>
+        <button id="context-export"><i class="fas fa-file-export"></i> Exporter</button>
+    </div>
+
+    <div class="notification" id="notification">
+        <div class="notification-content">
+            <i class="notification-icon"></i>
+            <span class="notification-message"></span>
+        </div>
+        <button class="notification-close">×</button>
     </div>
 
     <!-- Chargement des bibliothèques externes -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/python-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/lint/lint.min.js"></script>
     
     <!-- Chargement de nos scripts dans le bon ordre -->
     <script src="{% static 'js/utils.js' %}"></script>
@@ -139,6 +186,8 @@
     <script src="{% static 'js/file-system.js' %}"></script>
     <script src="{% static 'js/code-execution.js' %}"></script>
     <script src="{% static 'js/terminal.js' %}"></script>
+    <script src="{% static 'js/error-detection.js' %}"></script>
+    <script src="{% static 'js/import-export.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
 </body>
 </html>
